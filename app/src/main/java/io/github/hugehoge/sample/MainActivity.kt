@@ -2,10 +2,8 @@ package io.github.hugehoge.sample
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.webkit.WebChromeClient
-import android.webkit.WebView
+import android.webkit.*
 import androidx.databinding.DataBindingUtil
-import androidx.webkit.WebViewClientCompat
 import io.github.hugehoge.sample.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -17,6 +15,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // for debug
+        WebView.setWebContentsDebuggingEnabled(true)
 
         binding.swipeRefreshLayout.setOnRefreshListener {
             binding.webView.reload()
@@ -63,8 +64,19 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun setupWebView() {
-        binding.webView.webViewClient = object : WebViewClientCompat() {
+        binding.webView.settings.javaScriptEnabled = true
 
+        binding.webView.webViewClient = object : WebViewClient() {
+            override fun onReceivedError(
+                    view: WebView?,
+                    request: WebResourceRequest?,
+                    error: WebResourceError?
+            ) {
+                super.onReceivedError(view, request, error)
+
+                view?.evaluateJavascript(DOM_REPLACE_JS, null)
+                view?.stopLoading()
+            }
         }
 
         binding.webView.webChromeClient = object : WebChromeClient() {
@@ -79,5 +91,8 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val INITIAL_PAGE_URL = "https://www.example.com/"
+
+        private const val ERROR_PAGE_HTML = ""
+        private const val DOM_REPLACE_JS = "document.documentElement.innerHTML = '$ERROR_PAGE_HTML'"
     }
 }
